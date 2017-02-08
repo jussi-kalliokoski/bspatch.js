@@ -9,7 +9,7 @@ function asyncIteratorToStream (iterator) {
   let prevSlice = null;
   let cursor = 0;
   let promiseResult = null;
-  return new ReadableStream({
+  const ctrl = {
     type: 'bytes',
     start () {},
     close () {},
@@ -50,7 +50,14 @@ function asyncIteratorToStream (iterator) {
         controller.enqueue(result);
       }
     },
-  });
+  };
+
+  try {
+    return new ReadableStream(ctrl);
+  } catch (error) {
+    delete ctrl.type;
+    return new ReadableStream(ctrl);
+  }
 }
 
 function bitReaderFromStreamReader (streamReader) {
@@ -162,6 +169,14 @@ function emulateBYOB (streamReader) {
   return { read };
 }
 
+function getBYOBReader (stream) {
+  try {
+    return stream.getReader({ mode: 'byob' });
+  } catch (error) {
+    return emulateBYOB(stream.getReader());
+  }
+}
+
 async function read (streamReader, buffer, offset, end) {
   if (offset >= end) { return; }
   const destination = buffer.subarray(offset, end);
@@ -189,7 +204,7 @@ async function readHeader (streamReader) {
 }
 
 function typedArrayStreamReader (typedArray) {
-  return asyncIteratorToStream([typedArray][Symbol.iterator]()).getReader({ mode: 'byob' });
+  return getBYOBReader(asyncIteratorToStream([typedArray][Symbol.iterator]()));
 }
 
 function * bspatch (oldReader, patchReader) {
@@ -203,14 +218,14 @@ function * bspatch (oldReader, patchReader) {
   }
 
   const control = new Uint8Array(controlSize);
-  const controlReader = bzip2Stream(typedArrayStreamReader(control)).getReader({ mode: 'byob' });
+  const controlReader = getBYOBReader(bzip2Stream(typedArrayStreamReader(control)));
   yield read(patchReader, control, 0, controlSize);
 
   const diff = new Uint8Array(diffSize);
-  const diffReader = bzip2Stream(typedArrayStreamReader(diff)).getReader({ mode: 'byob' });
+  const diffReader = getBYOBReader(bzip2Stream(typedArrayStreamReader(diff)));
   yield read(patchReader, diff, 0, diffSize);
 
-  const extraReader = bzip2Stream(patchReader).getReader({ mode: 'byob' });
+  const extraReader = getBYOBReader(bzip2Stream(patchReader));
 
   const temp1 = new Uint8Array(BUFFER_SIZE);
   const temp2 = new Uint8Array(BUFFER_SIZE);
