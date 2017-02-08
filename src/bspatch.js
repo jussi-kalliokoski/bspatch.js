@@ -151,11 +151,12 @@ function emulateBYOB (streamReader) {
   if (streamReader.read.length === 1) { return streamReader; }
   let buffer = null;
   let offset = 0;
-  let done = false;
 
   async function read (destination) {
     if (!buffer || buffer.length === offset) {
+      let done;
       ({ value : buffer, done } = await streamReader.read());
+      if (done) { return { done, value: destination.subarray(0, 0) }; }
       offset = 0;
     }
 
@@ -163,7 +164,7 @@ function emulateBYOB (streamReader) {
     destination.set(buffer.subarray(offset, offset + copyAmount));
     offset += copyAmount;
     const value = destination.subarray(0, copyAmount);
-    return { done: done && offset === buffer.length, value };
+    return { done: false, value };
   }
 
   return { read };
