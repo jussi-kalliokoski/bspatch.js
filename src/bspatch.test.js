@@ -105,4 +105,16 @@ describe('bspatch', () => {
       expect(result).toBe(expected);
     }
   });
+
+  test('it should work with non-byob streams', async () => {
+    const fixture = randomString(Math.floor(Math.random() * 1000 + 500));
+    const expected = modify(fixture);
+    fs.writeFileSync('fixture.txt', fixture, 'utf8');
+    fs.writeFileSync('expected.txt', expected, 'utf8');
+    child_process.execSync('bsdiff fixture.txt expected.txt patch.patch');
+    const fixtureStreamReader = bufferStream(fs.readFileSync('fixture.txt')).getReader();
+    const patchStreamReader = bufferStream(fs.readFileSync('patch.patch')).getReader();
+    const result = await readStreamAsText(bspatchStream(fixtureStreamReader, patchStreamReader));
+    expect(result).toBe(expected);
+  });
 });

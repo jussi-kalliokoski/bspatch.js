@@ -140,6 +140,28 @@ function getAsciiString (bytes, offset, end) {
   return string;
 }
 
+function emulateBYOB (streamReader) {
+  if (streamReader.read.length === 1) { return streamReader; }
+  let buffer = null;
+  let offset = 0;
+  let done = false;
+
+  async function read (destination) {
+    if (!buffer || buffer.length === offset) {
+      ({ value : buffer, done } = await streamReader.read());
+      offset = 0;
+    }
+
+    const copyAmount = Math.min(destination.length, buffer.length - offset);
+    destination.set(buffer.subarray(offset, offset + copyAmount));
+    offset += copyAmount;
+    const value = destination.subarray(0, copyAmount);
+    return { done: done && offset === buffer.length, value };
+  }
+
+  return { read };
+}
+
 async function read (streamReader, buffer, offset, end) {
   if (offset >= end) { return; }
   const destination = buffer.subarray(offset, end);
@@ -171,6 +193,9 @@ function typedArrayStreamReader (typedArray) {
 }
 
 function * bspatch (oldReader, patchReader) {
+  oldReader = emulateBYOB(oldReader);
+  patchReader = emulateBYOB(patchReader);
+
   const { magic, controlSize, diffSize, newSize } = yield readHeader(patchReader);
 
   if (magic != MAGIC || controlSize < 0 || diffSize < 0 || newSize < 0) {
