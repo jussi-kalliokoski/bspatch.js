@@ -1,0 +1,36 @@
+{
+  "name": "bspatch",
+  "version": "0.0.0",
+  "description": "",
+  "main": "src/bspatch.js",
+  "files": ["src/bspatch.js"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jussi-kalliokoski/bspatch.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jussi-kalliokoski/bspatch.js/issues"
+  },
+  "homepage": "https://github.com/jussi-kalliokoski/bspatch.js#readme",
+  "keywords": [
+    "bsdiff",
+    "bspatch",
+    "patch",
+    "diff",
+    "delta",
+    "encoding",
+    "compression",
+    "performance"
+  ],
+  "scripts": {
+    "test": "node --harmony-async-await node_modules/.bin/jest"
+  },
+  "author": "Jussi Kalliokoski <jussi.kalliokoski@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "bzip2-async": "0.0.0"
+  },
+  "devDependencies": {
+    "jest": "^18.1.0"
+  }
+}
