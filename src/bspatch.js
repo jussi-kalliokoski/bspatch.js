@@ -18,7 +18,10 @@ function asyncIteratorToStream (iterator) {
         prevSlice = null;
 
         while (true) {
-          const { done, value } = iterator.next(promiseResult);
+          const { done, value } =
+            promiseResult === null ? iterator.next() :
+            'error' in promiseResult ? iterator.throw(promiseResult.error) :
+            iterator.next(promiseResult.result);
 
           if (done) {
             controller.close();
@@ -32,7 +35,11 @@ function asyncIteratorToStream (iterator) {
             break;
           }
 
-          promiseResult = await value;
+          try {
+            promiseResult = { result: await value };
+          } catch (error) {
+            promiseResult = { error };
+          }
         }
       }
 
