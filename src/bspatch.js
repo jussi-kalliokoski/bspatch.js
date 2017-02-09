@@ -189,6 +189,7 @@ async function read (streamReader, buffer, offset, end) {
   if (offset >= end) { return; }
   const destination = buffer.subarray(offset, end);
   const { value: newView, done } = await streamReader.read(destination);
+  if (done) { throw new Error('Unexpected EOF'); }
   return read(streamReader, buffer, offset + newView.byteLength, end);
 }
 
