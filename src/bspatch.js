@@ -268,6 +268,9 @@ function * bspatch (oldReader, patchReader) {
       yield temp1.slice(0, readAmount);
     }
 
+    // skip unnecessary seek
+    if (newPos === newSize) { break; }
+
     if (seekSize < 0) {
       throw new Error('Corrupt patch');
     }
