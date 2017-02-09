@@ -3,7 +3,7 @@
 const { decompress, header } = require('bzip2-async');
 
 const MAGIC = "BSDIFF40";
-const BUFFER_SIZE = 256;
+const BUFFER_SIZE = 4096;
 
 function asyncIteratorToStream (iterator) {
   let prevSlice = null;
